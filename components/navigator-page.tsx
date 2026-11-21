@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { navSections, searchEngines, type NavLink } from "@/data/navigation";
+import { BrandIcon } from "./brand-icon";
+import { EnginePicker } from "./engine-picker";
 
 function hostname(url: string) {
   try { return new URL(url).hostname.replace(/^www\./, ""); }
@@ -10,10 +11,7 @@ function hostname(url: string) {
 }
 
 function SiteIcon({ link }: { link: NavLink }) {
-  const [failed, setFailed] = useState(false);
-  const host = link.iconHost || hostname(link.url);
-  if (failed || !host) return <span className="site-icon-fallback" aria-hidden="true">{link.name.slice(0, 1)}</span>;
-  return <Image src={`https://www.google.com/s2/favicons?domain=${host}&sz=64`} alt="" width={22} height={22} unoptimized loading="lazy" onError={() => setFailed(true)} />;
+  return <BrandIcon id={link.icon} />;
 }
 
 export function NavigatorPage() {
@@ -26,7 +24,7 @@ export function NavigatorPage() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      const editing = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+      const editing = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable || target.getAttribute("role") === "option";
       if ((event.key === "/" && !editing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k")) {
         event.preventDefault();
         inputRef.current?.focus();
@@ -65,8 +63,8 @@ export function NavigatorPage() {
       </header>
       <form className="search-console" onSubmit={search} role="search">
         <div className="search-console-top">
-          <label htmlFor="engine">Search with</label>
-          <select id="engine" value={engineId} onChange={(event) => setEngineId(event.target.value)}>{searchEngines.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+          <span className="search-engine-label">Search with</span>
+          <EnginePicker engines={searchEngines} value={engineId} onChange={setEngineId} />
           <span>Press / to focus</span>
         </div>
         <div className="search-input-row">

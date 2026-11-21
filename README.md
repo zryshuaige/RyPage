@@ -30,7 +30,7 @@
 
 | Route | Experience |
 | --- | --- |
-| `/` | 纯视觉入口：主题、音乐、一言与页面出口 |
+| `/` | 纯视觉入口：主题、音乐、一言与 IP 城市天气 |
 | `/navigator/` | 六个搜索引擎与四组网址索引；`/`、`⌘/Ctrl K` 快速聚焦 |
 | `/works/` | RyHarness、ReAGround、RyBox、RyAgent As A Service |
 
@@ -58,4 +58,4 @@ Next.js 16 · React 19 · TypeScript · Canvas 2D · 静态导出至 `out/`。
 
 ## Audio
 
-Rêverie 音频来自 [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Reverie.ogg)，使用远程流；Moonlight Sonata 公共领域录音随站点本地提供。
+Rêverie 音频来自 [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Reverie.ogg)，与 Moonlight Sonata 公共领域录音一样随站点本地提供，并预加载当前曲目。

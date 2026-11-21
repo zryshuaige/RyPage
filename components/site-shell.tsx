@@ -11,7 +11,7 @@ type Track = { title: string; composer: string; src: string };
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const tracks: Record<Theme, Track> = {
-  reverie: { title: "Rêverie", composer: "Claude Debussy", src: "https://upload.wikimedia.org/wikipedia/commons/5/53/Reverie.ogg" },
+  reverie: { title: "Rêverie", composer: "Claude Debussy", src: `${publicBasePath}/audio/reverie.ogg` },
   yonder: { title: "Moonlight Sonata", composer: "Ludwig van Beethoven", src: `${publicBasePath}/audio/moonlight.ogg` },
 };
 
@@ -149,7 +149,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <audio
           ref={audioRef}
           src={track.src}
-          preload="metadata"
+          preload="auto"
           onCanPlay={() => {
             if (isPlaying) audioRef.current?.play().catch(() => { setAudioError(true); setIsPlaying(false); });
           }}

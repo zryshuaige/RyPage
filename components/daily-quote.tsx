@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Quote = { text: string; source: string };
-const fallback = { text: "保持热爱，奔赴下一场山海。", source: "编辑部寄语" };
+const fallback = { text: "Not all those who wander are lost.", source: "J. R. R. Tolkien" };
 
 export function DailyQuote() {
   const [quote, setQuote] = useState<Quote>(fallback);

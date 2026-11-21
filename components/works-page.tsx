@@ -9,7 +9,7 @@ export function WorksPage() {
       <header className="works-intro">
         <p>SELECTED WORKS / FOUR INDEPENDENT QUESTIONS</p>
         <h1>Ideas,<br /><em>made&nbsp;&nbsp;tangible.</em></h1>
-        <span>Interaction, local perception, recoverable execution,<br />and the space between edge and cloud.</span>
+        <span>Relationships, local perception, native computer use,<br />and orchestration across hosted agents.</span>
       </header>
       <HarnessSection />
       <ReagroundSection />
