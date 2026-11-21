@@ -1,3 +1,12 @@
+# Dependencies
+node_modules
+
+# Next.js and build output
+.next
+out
+dist
+*.tsbuildinfo
+
 # Logs
 logs
 *.log
@@ -5,23 +14,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Local files
 *.local
-*.tsbuildinfo
-.claude/
-.zcode/
+.env
+.env.*
+!.env.example
+.DS_Store
+.kimi-code/
+.vercel
+coverage/
 
-# Editor directories and files
+# Editor directories
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?

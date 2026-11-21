@@ -1,1 +1,0 @@
-export { vReveal } from './reveal'
