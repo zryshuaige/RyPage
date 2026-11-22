@@ -1,0 +1,26 @@
+{
+  "earth": {
+    "title": "The Blue Marble — West",
+    "source": "https://solarviews.com/cap/earth/bluemarblewest.htm",
+    "credit": "NASA/MODIS/USGS; Reto Stöckli and Robert Simmon",
+    "usage": "Compressed local navigation texture"
+  },
+  "moon": {
+    "title": "Good Morning, Moon",
+    "source": "https://www.nasa.gov/image-article/good-morning-moon/",
+    "credit": "NASA Goddard Space Flight Center / Intuitive Machines; LROC",
+    "usage": "Compressed local navigation texture"
+  },
+  "galaxy": {
+    "title": "Whirlpool Galaxy (M51), Hubble 15th Anniversary",
+    "source": "https://hubblesite.org/contents/media/images/2005/12/1676-Image.html",
+    "credit": "NASA/ESA Hubble Heritage Team, STScI",
+    "usage": "Galaxy cropped from the official composite for the local navigation texture"
+  },
+  "moonScene": {
+    "title": "CGI Moon Kit — Color and Displacement",
+    "source": "https://svs.gsfc.nasa.gov/4720/",
+    "credit": "NASA Scientific Visualization Studio; LROC and LOLA instrument teams",
+    "usage": "Localized albedo and normalized elevation textures for the real-time 3D Moon"
+  }
+}

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { EvidenceDisclosure } from "./evidence-disclosure";
+import { ProductAccent } from "./product-accent";
 import { StudyHeading } from "./study-heading";
 
 const actions = [
@@ -25,6 +26,7 @@ export function RyboxSection() {
   const action = actions.find((item) => item.id === selected) ?? actions[0];
   return (
     <section id="rybox" className="product-study rybox-study" aria-labelledby="rybox-title">
+      <div className="product-scene-accent"><ProductAccent product="rybox" /></div>
       <StudyHeading id="rybox-title" eyebrow="Computer use, with a shorter path to action" name="RyBox" title="让 Agent 操作电脑，更接近一种本能。" description="针对 Agent Computer Use 技能特殊优化的沙箱：为浏览器与软件操作内置 tool_use，减少感知到执行之间的往返，提升响应与操作灵敏性；隔离与可逆性则是它的底层边界。" status="未来构想" />
       <div className="sandbox-model-scene">
         <div className="sandbox-policy">
@@ -45,14 +47,14 @@ export function RyboxSection() {
               <div className="state-diff">
                 <div><span>CONVENTIONAL PATH</span><code>{executed ? action.before : "Observe → plan → operate"}</code></div><span className="diff-arrow" aria-hidden="true">→</span><div><span>RYBOX PATH</span><code>{executed ? action.after : "Agent → tool_use"}</code></div>
               </div>
-              <div className={`reversibility is-${executed ? action.tone : "idle"}`}>
+              <div className="reversibility">
                 <div><span>SANDBOX BOUNDARY</span><span>{executed ? action.recovery : "Always active"}</span></div>
                 <div className="reversibility-track"><span className="boundary-marker" /><motion.i animate={{ left: executed ? `${action.position}%` : "4%" }} transition={{ duration: reducedMotion ? 0 : 0.4, ease: [0.23, 1, 0.32, 1] }} /></div>
                 <div className="reversibility-labels"><span>RESTORABLE</span><span>IRREVERSIBLE</span></div>
               </div>
             </motion.div>
           </AnimatePresence>
-          <div className={`consequence-result is-${action.tone}`} aria-live="polite"><p>{executed ? action.result : "这里不会执行真实操作，只呈现内置 tool_use 的调用方式。"}</p></div>
+          <div className="consequence-result" aria-live="polite"><p>{executed ? action.result : "这里不会执行真实操作，只呈现内置 tool_use 的调用方式。"}</p></div>
           <div className="consequence-buttons"><button type="button" onClick={() => setExecuted(true)} disabled={executed}>推演调用 <span>↗</span></button><button type="button" onClick={() => setExecuted(false)} disabled={!executed}>重置</button></div>
         </div>
       </div>

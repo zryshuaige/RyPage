@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { EvidenceDisclosure } from "./evidence-disclosure";
+import { ProductAccent } from "./product-accent";
 import { StudyHeading } from "./study-heading";
 
 const routes = [
@@ -43,6 +44,7 @@ export function RyagentSection() {
 
   return (
     <section id="ryagent" className="product-study ryagent-study" aria-labelledby="ryagent-title">
+      <div className="product-scene-accent"><ProductAccent product="ryagent" /></div>
       <StudyHeading id="ryagent-title" eyebrow="Harness as a Service, evolved" name="RyAgent As A Service" title="不止一个 Agent 在线，而是一群 Agent 协同运行。" description="从 Harness as a Service 进阶为 Multi-Hosted Agents 的调度优化层：发现不同宿主中的 Agent，按任务分配、接力与恢复。持续状态连接整个集群，端云协同在底层完成。" status="未来服务构想" />
       <div className="continuity-scene" ref={sceneRef}>
         <div className="continuity-top"><span><i className={running ? "is-live" : ""} />MULTI-HOSTED AGENTS / {running ? "SCHEDULING" : "SCHEDULER HELD"}</span><button type="button" onClick={() => setRunning((value) => !value)}>{running ? "暂停调度" : "继续调度"}<span aria-hidden="true">{running ? "Ⅱ" : "▷"}</span></button></div>

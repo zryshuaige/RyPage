@@ -10,6 +10,7 @@ export function WorksPage() {
         <p>SELECTED WORKS / FOUR INDEPENDENT QUESTIONS</p>
         <h1>Ideas,<br /><em>made&nbsp;&nbsp;tangible.</em></h1>
         <span>Relationships, local perception, native computer use,<br />and orchestration across hosted agents.</span>
+        <a className="works-entry" href="#ryharness">Enter selected works <span aria-hidden="true">↓</span></a>
       </header>
       <HarnessSection />
       <ReagroundSection />

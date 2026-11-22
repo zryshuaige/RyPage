@@ -1,17 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { navSections, searchEngines, type NavLink } from "@/data/navigation";
+import { navSections, searchEngines } from "@/data/navigation";
 import { BrandIcon } from "./brand-icon";
 import { EnginePicker } from "./engine-picker";
 
 function hostname(url: string) {
   try { return new URL(url).hostname.replace(/^www\./, ""); }
   catch { return ""; }
-}
-
-function SiteIcon({ link }: { link: NavLink }) {
-  return <BrandIcon id={link.icon} />;
 }
 
 export function NavigatorPage() {
@@ -88,7 +84,7 @@ export function NavigatorPage() {
               <div className="directory-links">
                 {section.links.map((link) => (
                   <a key={link.name} href={link.url} target="_blank" rel="noreferrer" className="directory-link">
-                    <span className="directory-icon"><SiteIcon link={link} /></span>
+                    <span className="directory-icon"><BrandIcon id={link.icon} /></span>
                     <span className="directory-link-copy"><strong>{link.name}</strong><p>{link.description}</p><span>{hostname(link.url)}</span></span>
                     <i>{link.tag}</i><b>↗</b>
                   </a>

@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { EvidenceDisclosure } from "./evidence-disclosure";
+import { ProductAccent } from "./product-accent";
 import { StudyHeading } from "./study-heading";
 
 const traitDefinitions = [
@@ -30,6 +31,7 @@ export function HarnessSection() {
 
   return (
     <section id="ryharness" className="product-study harness-study" aria-labelledby="harness-title">
+      <div className="product-scene-accent"><ProductAccent product="ryharness" /></div>
       <StudyHeading id="harness-title" eyebrow="Personality before infrastructure" name="RyHarness" title="不只回应你，也慢慢懂得如何与你相处。" description="人格不是一张角色皮肤。外向、严谨、幽默与主动进入真实行为，记忆和反馈则让每一次共同工作都改变下一次相遇。" status="开发者预览" href="https://github.com/zryshuaige/RyHarness" />
       <div className="personality-scene">
         <div className="personality-visual">

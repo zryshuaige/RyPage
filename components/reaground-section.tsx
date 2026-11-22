@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { EvidenceDisclosure } from "./evidence-disclosure";
+import { ProductAccent } from "./product-accent";
 import { StudyHeading } from "./study-heading";
 
 const dimensions = [
@@ -48,18 +49,17 @@ function SpeedScene({ active }: { active: boolean }) {
   </svg>;
 }
 
-function TrainingScene({ active }: { active: boolean }) {
-  const reducedMotion = useReducedMotion();
+function TrainingScene() {
   const stages = [
     { x: 31, px: 12, py: 17, width: 80, height: 117, label: "DIRECT", type: "SFT" },
     { x: 119, px: 9, py: 10, width: 66, height: 94, label: "REGION", type: "SFT" },
     { x: 207, px: 5, py: 5, width: 54, height: 74, label: "GRPO", type: "RL" },
   ];
   return <svg viewBox="0 0 320 220" fill="none" aria-hidden="true">
-    {stages.map((stage, index) => <g key={stage.label}>
+    {stages.map((stage) => <g key={stage.label}>
       <rect x={stage.x} y="32" width="82" height="142" rx="9" className="ground-training-frame" />
       <rect x={stage.x + 18} y="57" width="46" height="68" rx="4" className="ground-training-target" />
-      <motion.rect rx="5" className="ground-training-prediction" initial={false} animate={active && !reducedMotion ? { x: stage.x + stage.px, y: 32 + stage.py, width: stage.width, height: stage.height } : { x: stage.x + stage.px, y: 32 + stage.py, width: stage.width, height: stage.height }} transition={{ duration: 0.6, delay: index * 0.08 }} />
+      <rect x={stage.x + stage.px} y={32 + stage.py} width={stage.width} height={stage.height} rx="5" className="ground-training-prediction" />
       <text x={stage.x + 41} y="151" textAnchor="middle" className="ground-node-label">{stage.label}</text><text x={stage.x + 41} y="164" textAnchor="middle" className="ground-micro">{stage.type}</text>
     </g>)}
     <path d="M61 194h198" className="ground-hairline" /><path d="m246 189 6 5-6 5" className="ground-arrow" />
@@ -71,12 +71,13 @@ export function ReagroundSection() {
   const [active, setActive] = useState<Dimension>("local");
   return (
     <section id="reaground" className="product-study reaground-study" aria-labelledby="reaground-title">
+      <div className="product-scene-accent"><ProductAccent product="reaground" /></div>
       <StudyHeading id="reaground-title" eyebrow="Local models, made practical" name="ReAGround" title="本地推理、推理效率、后训练，缺一不可。" description="不是只让 GUI 模型看懂截图，而是同时回答它能否留在本地、能否高效观察、能否通过训练持续变得更好。" status="研究与开发" href="https://github.com/zryshuaige/ReAGround" />
       <div className="grounding-dimensions">
         {dimensions.map((dimension) => <button key={dimension.id} type="button" className={`grounding-dimension ${active === dimension.id ? "is-active" : ""}`} aria-pressed={active === dimension.id} onPointerEnter={() => setActive(dimension.id)} onFocus={() => setActive(dimension.id)} onClick={() => setActive(dimension.id)}>
           <span className="dimension-heading"><span>{dimension.index} / {dimension.label}</span><i aria-hidden="true" /></span>
           <span className="dimension-title">{dimension.title}</span>
-          {dimension.id === "local" ? <LocalScene /> : dimension.id === "speed" ? <SpeedScene active={active === "speed"} /> : <TrainingScene active={active === "training"} />}
+          {dimension.id === "local" ? <LocalScene /> : dimension.id === "speed" ? <SpeedScene active={active === "speed"} /> : <TrainingScene />}
           <span className="dimension-copy">{dimension.detail}</span><span className="dimension-footer">{dimension.footer}</span>
         </button>)}
       </div>

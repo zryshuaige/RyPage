@@ -10,6 +10,9 @@
   color: var(--study-ink);
   background: var(--study-bg);
 }
+.product-study > :not(.product-scene-accent) { position: relative; z-index: 1; }
+.product-scene-accent { position: absolute; z-index: 0; top: 2%; right: -3%; width: min(48vw, 620px); color: var(--study-accent); opacity: .075; pointer-events: none; }
+.product-scene-accent svg { width: 100%; stroke-width: 1.1; }
 .reaground-study { --study-bg: #e8ecea; --study-ink: #142e3d; --study-muted: #5e737d; --study-accent: #247593; --study-line: rgb(20 46 61 / 15%); --study-surface: rgb(255 255 255 / 32%); }
 .rybox-study { --study-bg: #e1e8ea; --study-ink: #142e3d; --study-muted: #5d727c; --study-accent: #247593; --study-line: rgb(20 46 61 / 16%); --study-surface: rgb(255 255 255 / 26%); }
 .ryagent-study { --study-bg: #0d1b2a; --study-ink: #e8f0f3; --study-muted: #96a9b8; --study-accent: #a5d8e9; --study-line: rgb(232 240 243 / 16%); --study-surface: rgb(232 240 243 / 4%); }
@@ -20,13 +23,16 @@
 .study-status { display: inline-flex; align-items: center; gap: 8px; }
 .study-status i { width: 6px; height: 6px; display: block; border-radius: 50%; background: var(--study-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--study-accent) 10%, transparent); }
 .study-heading > h2 { margin: 30px 0 0; font-family: var(--font-manrope), "PingFang SC", sans-serif; font-size: clamp(4.2rem, 10.5vw, 11rem); font-weight: 550; letter-spacing: -0.065em; line-height: 0.94; overflow-wrap: anywhere; }
+.study-name-link { display: inline-flex; align-items: flex-end; gap: .12em; transition: color 180ms var(--ease-out); }
+.study-name-link > span { margin-bottom: .16em; color: var(--study-accent); font-family: var(--mono); font-size: .16em; letter-spacing: 0; opacity: .55; transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+.study-name-link:hover { color: var(--study-accent); }
+.study-name-link:hover > span { opacity: 1; transform: translate(2px, -2px); }
 .ryagent-study .study-heading > h2 { font-size: clamp(3.5rem, 8vw, 8.8rem); }
 .study-heading-copy { width: min(650px, 50%); margin: 48px 0 0 auto; }
 .study-heading-copy h3 { margin: 0 0 20px; font-size: clamp(1.8rem, 3vw, 3.25rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.28; }
 .study-heading-copy > p { margin: 0; color: var(--study-muted); font-size: 0.94rem; line-height: 1.9; }
 .study-heading-copy > a { display: inline-flex; gap: 8px; margin-top: 26px; padding-bottom: 5px; border-bottom: 1px solid currentColor; font-size: 0.78rem; }
 .scene-topline { min-height: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--study-muted); font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.075em; }
-.scene-kicker { color: var(--study-muted); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; }
 
 .evidence-disclosure { margin-top: 18px; border-bottom: 1px solid var(--study-line); }
 .evidence-toggle { width: 100%; min-height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0; color: var(--study-ink); background: transparent; border: 0; font-size: 0.78rem; text-align: left; }
@@ -160,10 +166,6 @@
 .continuity-copy h3 em { display: inline-block; margin-left: 9px; color: var(--study-muted); font-family: var(--mono); font-size: 0.66rem; font-style: normal; letter-spacing: 0; vertical-align: top; }
 .continuity-copy p { max-width: 480px; margin: 0; color: var(--study-muted); font-size: 0.82rem; line-height: 1.85; }
 .task-state { padding: 20px 22px; background: rgb(232 240 243 / 3%); border: 1px solid var(--study-line); border-radius: 14px; }
-.task-state dl { margin: 21px 0; }
-.task-state dl > div { display: flex; justify-content: space-between; gap: 20px; padding: 11px 0; border-top: 1px solid var(--study-line); font-size: 0.68rem; }
-.task-state dt { color: var(--study-muted); }
-.task-state dd { margin: 0; text-align: right; }
 .host-list { margin: 17px 0; }
 .host-list > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; padding: 8px 0; border-top: 1px solid var(--study-line); }
 .host-list > div > span { display: grid; grid-template-columns: 7px 1fr; align-items: center; gap: 3px 8px; font-size: 0.69rem; }
@@ -209,6 +211,7 @@
 
 @media (max-width: 640px) {
   .product-study { padding: 85px 20px; }
+  .product-scene-accent { top: 4%; right: -28%; width: 92vw; opacity: .05; }
   .study-heading { margin-bottom: 55px; }
   .study-heading-meta { font-size: 0.64rem; }
   .study-heading > h2, .ryagent-study .study-heading > h2 { margin-top: 24px; font-size: 14.5vw; line-height: 1; }

@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { FlowField } from "./flow-field";
+import { WorldCanvas } from "./world-canvas";
+import { useAudioEnergy } from "./use-audio-energy";
 
 export type Theme = "reverie" | "yonder";
+export type Space = "earth" | "moon" | "galaxy";
 type Track = { title: string; composer: string; src: string };
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const links = [
+  { href: "/", label: "Home", space: "earth" },
+  { href: "/navigator/", label: "Index", space: "moon" },
+  { href: "/works/", label: "Works", space: "galaxy" },
+] as const;
 
 const tracks: Record<Theme, Track> = {
   reverie: { title: "Rêverie", composer: "Claude Debussy", src: `${publicBasePath}/audio/reverie.ogg` },
@@ -41,12 +48,15 @@ function formatTime(value: number) {
 function SiteHeader() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-  const links = [["/", "Home"], ["/navigator/", "Index"], ["/works/", "Works"]] as const;
+  const activeIndex = Math.max(0, links.findIndex((link) => link.href === pathname));
   return (
     <header className="site-chrome-header">
       <Link href="/" className="site-wordmark">Ryen <em>in AI</em></Link>
       <nav aria-label="主导航">
-        {links.map(([href, label]) => <Link key={href} href={href} className={pathname === href ? "is-active" : ""}>{label}</Link>)}
+        <span className="space-nav-indicator" style={{ transform: `translateX(${activeIndex * 100}%)` }} aria-hidden="true">
+          {links.map((link) => <i key={link.space} className={link.space === links[activeIndex].space ? "is-active" : ""} style={{ backgroundImage: `url(${publicBasePath}/textures/${link.space}-nav.webp)` }} />)}
+        </span>
+        {links.map((link) => <Link key={link.href} href={link.href} className={pathname === link.href ? "is-active" : ""} aria-current={pathname === link.href ? "page" : undefined}><span>{link.label}</span></Link>)}
       </nav>
       <div className="site-header-actions">
         <a href="https://github.com/zryshuaige" target="_blank" rel="noreferrer" className="github-link">GitHub ↗</a>
@@ -90,6 +100,8 @@ function MusicPlayer() {
 }
 
 export function SiteShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const space = links.find((link) => link.href === pathname)?.space ?? "earth";
   const [theme, setTheme] = useState<Theme>("reverie");
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -97,6 +109,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const [audioError, setAudioError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const themeReady = useRef(false);
+  const { energyRef, activateAudio } = useAudioEnergy(audioRef, isPlaying);
   const track = tracks[theme];
 
   useEffect(() => {
@@ -117,6 +130,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => {
+    activateAudio();
     setProgress(0);
     setDuration(0);
     setAudioError(false);
@@ -127,6 +141,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
+      activateAudio();
       setAudioError(false);
       audio.play().then(() => setIsPlaying(true)).catch(() => { setAudioError(true); setIsPlaying(false); });
     } else {
@@ -141,8 +156,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, isPlaying, togglePlay, progress, duration, seek, audioError }}>
-      <div className="site-shell" data-theme={theme}>
-        <FlowField theme={theme} />
+      <div className="site-shell" data-theme={theme} data-space={space}>
+        <WorldCanvas space={space} theme={theme} energy={energyRef} />
         <SiteHeader />
         <div className="site-page-content">{children}</div>
         <MusicPlayer />

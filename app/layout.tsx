@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
 import "./site.css";
+import "./world.css";
 import "./ry-page.css";
 
 const manrope = localFont({
