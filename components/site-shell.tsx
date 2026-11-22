@@ -123,6 +123,26 @@ export function SiteShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let idleId: number | null = null;
+    let fallbackId: number | null = null;
+    const preload = () => {
+      const inactiveTrack = theme === "reverie" ? tracks.yonder : tracks.reverie;
+      void fetch(inactiveTrack.src, { signal: controller.signal, cache: "force-cache", priority: "low" }).then((response) => {
+        if (!response.ok) throw new Error("Audio preload failed");
+        return response.arrayBuffer();
+      }).catch(() => {});
+    };
+    if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(preload, { timeout: 4000 });
+    else fallbackId = window.setTimeout(preload, 2000);
+    return () => {
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (fallbackId !== null) window.clearTimeout(fallbackId);
+      controller.abort();
+    };
+  }, [theme]);
+
+  useEffect(() => {
     if (!themeReady.current) return;
     localStorage.setItem("rypage-theme", theme);
     document.documentElement.style.colorScheme = theme === "yonder" ? "dark" : "light";
@@ -164,7 +184,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <audio
           ref={audioRef}
           src={track.src}
-          preload="auto"
+          preload="metadata"
           onCanPlay={() => {
             if (isPlaying) audioRef.current?.play().catch(() => { setAudioError(true); setIsPlaying(false); });
           }}

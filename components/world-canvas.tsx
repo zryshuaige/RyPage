@@ -19,15 +19,22 @@ export function WorldCanvas({ space, theme, energy }: { space: Space; theme: The
 
   useEffect(() => {
     let cancelled = false;
+    let idleId: number | null = null;
+    let fallbackId: number | null = null;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    import("./world/renderer").then(({ createWorldRenderer }) => {
+    import("./world/renderer").then(({ createWorldRenderer, preloadMoonTextures }) => {
       if (cancelled) return;
       const current = latest.current;
       rendererRef.current = createWorldRenderer(canvas, current.space, current.theme, current.energy);
+      const preload = () => { void preloadMoonTextures().catch(() => {}); };
+      if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(preload, { timeout: 3000 });
+      else fallbackId = window.setTimeout(preload, 1500);
     }).catch(() => { if (!cancelled) setFailed(true); });
     return () => {
       cancelled = true;
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (fallbackId !== null) window.clearTimeout(fallbackId);
       rendererRef.current?.dispose();
       rendererRef.current = null;
     };

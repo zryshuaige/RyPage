@@ -10,6 +10,8 @@ import { createMoonScene } from "./moon";
 import { createGalaxyScene } from "./galaxy";
 import type { SceneOptions, WorldScene } from "./types";
 
+export { preloadMoonTextures } from "./moon";
+
 export class WorldRenderer {
   private canvas: HTMLCanvasElement;
   private renderer: WebGLRenderer;
@@ -178,10 +180,12 @@ export class WorldRenderer {
 
   private frame = (time: number) => {
     if (!this.running) return;
-    if (time - this.lastFrame >= (this.transitioning ? 14 : 30)) {
-      const delta = this.lastFrame ? time - this.lastFrame : 16.67;
+    const interval = 1000 / (this.transitioning ? 50 : 30);
+    const elapsed = time - this.lastFrame;
+    if (!this.lastFrame || elapsed >= interval) {
+      const delta = this.lastFrame ? elapsed : 16.67;
       this.draw(time, delta);
-      this.lastFrame = time;
+      this.lastFrame = this.lastFrame ? time - (elapsed % interval) : time;
     }
     this.frameId = requestAnimationFrame(this.frame);
   };

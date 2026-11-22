@@ -3,6 +3,31 @@ import type { SceneOptions, WorldFrame, WorldScene } from "./types";
 import { disposeScene } from "./utils";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+type MoonTextureName = "moon-albedo.webp" | "moon-elevation.png";
+const textureCache = new Map<MoonTextureName, Promise<Texture>>();
+
+function loadMoonTexture(name: MoonTextureName) {
+  const cached = textureCache.get(name);
+  if (cached) return cached;
+  const loading = new TextureLoader().loadAsync(`${publicBasePath}/textures/${name}`).then((texture) => {
+    texture.anisotropy = 8;
+    if (name === "moon-albedo.webp") texture.colorSpace = SRGBColorSpace;
+    else {
+      texture.minFilter = LinearFilter;
+      texture.magFilter = LinearFilter;
+    }
+    return texture;
+  }).catch((error: unknown) => {
+    textureCache.delete(name);
+    throw error;
+  });
+  textureCache.set(name, loading);
+  return loading;
+}
+
+export function preloadMoonTextures() {
+  return Promise.all([loadMoonTexture("moon-albedo.webp"), loadMoonTexture("moon-elevation.png")]).then(() => undefined);
+}
 
 export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldScene {
   const scene = new Scene();
@@ -16,26 +41,19 @@ export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldSc
   moon.rotation.set(0.08, -0.7, -0.03);
   scene.add(moon);
 
-  const loader = new TextureLoader();
-  const textures: Texture[] = [];
   let disposed = false;
-  const load = (name: string, onLoad: (texture: Texture) => void) => {
-    loader.load(`${publicBasePath}/textures/${name}`, (texture) => {
-      if (disposed) { texture.dispose(); return; }
-      textures.push(texture);
-      texture.anisotropy = 8;
+  const load = (name: MoonTextureName, onLoad: (texture: Texture) => void) => {
+    void loadMoonTexture(name).then((texture) => {
+      if (disposed) return;
       onLoad(texture);
       onAssetReady();
-    });
+    }).catch(() => {});
   };
   load("moon-albedo.webp", (texture) => {
-    texture.colorSpace = SRGBColorSpace;
     material.map = texture;
     material.needsUpdate = true;
   });
   load("moon-elevation.png", (texture) => {
-    texture.minFilter = LinearFilter;
-    texture.magFilter = LinearFilter;
     material.bumpMap = texture;
     material.needsUpdate = true;
   });
@@ -93,7 +111,6 @@ export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldSc
     dispose() {
       disposed = true;
       disposeScene(scene);
-      textures.forEach((texture) => texture.dispose());
     },
   };
 }
