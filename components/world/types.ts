@@ -15,6 +15,7 @@ export type WorldFrame = {
 export type WorldScene = {
   scene: Scene;
   camera: Camera;
+  ready: Promise<void>;
   update: (frame: WorldFrame) => void;
   resize: (width: number, height: number) => void;
   dispose: () => void;

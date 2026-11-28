@@ -2,16 +2,28 @@ import { AdditiveBlending, BackSide, BufferGeometry, Float32BufferAttribute, Mes
 import { disposeScene, glslNoise } from "./utils";
 import type { SceneOptions, WorldFrame, WorldScene } from "./types";
 
+const shorelineBase = -13;
 const shoreline = `
 float shoreline(float x) {
   float coast = x + 3.0;
-  return -11.0 + coast * coast * 0.085 + sin(x * 0.65) * 0.11 + sin(x * 1.7) * 0.035;
+  return ${shorelineBase.toFixed(1)} + coast * coast * 0.085 + sin(x * 0.65) * 0.11 + sin(x * 1.7) * 0.035;
+}
+`;
+
+const swash = `
+vec4 swashState(float x, float time) {
+  float phase = fract(time * 0.13 + sin(x * 0.12) * 0.025);
+  float primary = smoothstep(0.0, 0.18, phase) * (1.0 - smoothstep(0.18, 1.0, phase));
+  float secondary = smoothstep(0.0, 0.24, fract(time * 0.17 + 0.43)) * (1.0 - smoothstep(0.24, 1.0, fract(time * 0.17 + 0.43)));
+  float alongshore = sin(x * 0.43 + time * 0.25) * 0.12 + sin(x * 1.1 - time * 0.17) * 0.04;
+  float reach = 0.18 + primary * 2.0 + secondary * 0.38 + alongshore * primary;
+  return vec4(shoreline(x) + reach, primary, phase, secondary);
 }
 `;
 
 function shorelineAt(x: number) {
   const coast = x + 3;
-  return -11 + coast * coast * 0.085 + Math.sin(x * 0.65) * 0.11 + Math.sin(x * 1.7) * 0.035;
+  return shorelineBase + coast * coast * 0.085 + Math.sin(x * 0.65) * 0.11 + Math.sin(x * 1.7) * 0.035;
 }
 
 const skyRadiance = `
@@ -104,6 +116,7 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
     fragmentShader: `
       ${glslNoise}
       ${shoreline}
+      ${swash}
       varying vec3 vWorldPosition;
       varying vec3 vNormal;
       uniform float uTime;
@@ -111,7 +124,8 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
       void main() {
         vec2 p = vWorldPosition.xz;
         float distanceToWater = p.y - shoreline(p.x);
-        float dry = smoothstep(0.0, 5.0, distanceToWater);
+        vec4 wash = swashState(p.x, uTime);
+        float dry = smoothstep(0.45 + wash.y * 0.7, 5.0 + wash.y * 1.2, distanceToWater);
         float grain = noise2(p * 22.0) * 0.025 + noise2(p * 1.4) * 0.035;
         vec3 wetDay = vec3(0.43, 0.51, 0.47);
         vec3 dryDay = vec3(0.72, 0.65, 0.51);
@@ -121,6 +135,25 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
         vec3 lightDirection = normalize(mix(vec3(0.55, 0.7, 0.4), vec3(0.58, 0.6, -0.3), uNight));
         float diffuse = 0.84 + max(dot(normalize(vNormal), lightDirection), 0.0) * 0.16;
         color *= diffuse + grain;
+        if (distanceToWater < 5.0) {
+          float edge = p.y - wash.x;
+          float antialias = max(0.025, fwidth(edge) * 1.25);
+          float film = (1.0 - smoothstep(-antialias, antialias, edge)) * smoothstep(-0.08, 0.12, distanceToWater);
+          vec3 filmColor = mix(vec3(0.32, 0.47, 0.5), vec3(0.035, 0.09, 0.12), uNight);
+          color = mix(color, filmColor, film * 0.68);
+          float retreat = smoothstep(0.18, 0.34, wash.z) * (1.0 - wash.y);
+          float residue = exp(-pow((distanceToWater - 1.35) / 0.75, 2.0)) * retreat * smoothstep(0.0, 0.12, edge);
+          float foamNoise = noise2(p * 2.4 + vec2(uTime * 0.035, 0.0));
+          float width = max(0.12, fwidth(edge) * 1.5);
+          float foam = exp(-pow(edge / width, 2.0)) * smoothstep(-0.02, 0.12, distanceToWater);
+          foam *= (0.25 + foamNoise * 0.75) * (0.35 + wash.y * 0.65);
+          foam += residue * smoothstep(0.45, 0.8, foamNoise) * 0.28;
+          vec3 foamColor = mix(vec3(0.86, 0.91, 0.87), vec3(0.24, 0.36, 0.43), uNight);
+          color = mix(color, foamColor, clamp(foam, 0.0, 0.78));
+          vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+          float glint = pow(max(dot(reflect(-lightDirection, normalize(vNormal)), viewDirection), 0.0), 90.0);
+          color += mix(vec3(0.32, 0.38, 0.36), vec3(0.08, 0.13, 0.18), uNight) * glint * film * 0.35;
+        }
         float haze = smoothstep(45.0, 130.0, length(p));
         color = mix(color, mix(vec3(0.72, 0.84, 0.86), vec3(0.04, 0.07, 0.11), uNight), haze);
         gl_FragColor = vec4(color, 1.0);
@@ -141,6 +174,7 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
       uniform float uAudio;
       uniform vec4 uRipples[4];
       ${shoreline}
+      ${swash}
       ${skyRadiance}
 
       void main() {
@@ -154,6 +188,8 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
         slope += vec2(0.96, -0.28) * cos(dot(p, vec2(0.96, -0.28)) * 4.1 + uTime * 0.82) * 0.006;
         slope += vec2(-0.71, -0.7) * cos(dot(p, vec2(-0.71, -0.7)) * 6.3 - uTime * 0.7) * 0.003;
         slope *= detail * energy;
+        float nearShore = 1.0 - smoothstep(0.0, 7.0, shoreline(p.x) - p.y);
+        slope += vec2(0.18, 0.82) * cos((shoreline(p.x) - p.y) * 3.2 - uTime * 1.6) * 0.012 * nearShore;
 
         for (int i = 0; i < 4; i++) {
           float age = uTime - uRipples[i].z;
@@ -168,7 +204,8 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
         vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
         vec3 reflectionDirection = reflect(-viewDirection, normal);
         vec3 reflection = skyRadiance(reflectionDirection, 0.25);
-        float shoreDistance = shoreline(p.x) - p.y;
+        vec4 swashData = swashState(p.x, uTime);
+        float shoreDistance = swashData.x - p.y;
         float depth = smoothstep(0.0, 28.0, shoreDistance);
         vec3 shallow = mix(vec3(0.17, 0.37, 0.37), vec3(0.018, 0.052, 0.073), uNight);
         vec3 deep = mix(vec3(0.025, 0.17, 0.24), vec3(0.004, 0.018, 0.035), uNight);
@@ -180,11 +217,12 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
         float glint = pow(max(dot(reflect(-lightDirection, normal), viewDirection), 0.0), mix(280.0, 120.0, uNight));
         color += mix(vec3(1.0, 0.87, 0.62), vec3(0.56, 0.75, 1.0), uNight) * glint * (mix(0.42, 0.1, uNight) + uAudio * 0.03);
 
-        float shoreNoise = (noise2(p * 0.8 + vec2(uTime * 0.035, 0.0)) - 0.5) * 0.55;
-        float wash = shoreDistance + shoreNoise + sin(uTime * 0.55) * 0.12;
-        float foam = exp(-pow((wash - 0.28) / 0.22, 2.0));
-        foam *= 0.12 + noise2(p * 2.1 + vec2(uTime * 0.05, 0.0)) * 0.88;
-        foam += exp(-pow((wash - 1.15) / 0.12, 2.0)) * (0.04 + noise2(p * 1.3) * 0.1);
+        float shoreNoise = (noise2(p * 0.8 + vec2(uTime * 0.035, 0.0)) - 0.5) * 0.32;
+        float edgeDistance = p.y - swashData.x + shoreNoise;
+        float foamWidth = max(0.16, fwidth(edgeDistance) * 1.4);
+        float foam = exp(-pow(edgeDistance / foamWidth, 2.0));
+        foam *= (0.18 + noise2(p * 2.1 + vec2(uTime * 0.05, 0.0)) * 0.82) * (0.35 + swashData.y * 0.65);
+        foam += exp(-pow((edgeDistance + 0.85) / 0.22, 2.0)) * (0.04 + noise2(p * 1.3) * 0.12) * (0.4 + swashData.w);
         color = mix(color, mix(vec3(0.86, 0.91, 0.87), vec3(0.24, 0.36, 0.43), uNight), clamp(foam, 0.0, 0.72));
         float haze = smoothstep(90.0, 650.0, cameraDistance);
         color = mix(color, mix(vec3(0.42, 0.64, 0.72), vec3(0.025, 0.05, 0.08), uNight), haze * 0.88);
@@ -220,6 +258,7 @@ export function createEarthScene({ mobile }: SceneOptions): WorldScene {
   return {
     scene,
     camera,
+    ready: Promise.resolve(),
     update(frame: WorldFrame) {
       shared.uTime.value = frame.time;
       shared.uNight.value = frame.night;

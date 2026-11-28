@@ -25,10 +25,6 @@ function loadMoonTexture(name: MoonTextureName) {
   return loading;
 }
 
-export function preloadMoonTextures() {
-  return Promise.all([loadMoonTexture("moon-albedo.webp"), loadMoonTexture("moon-elevation.png")]).then(() => undefined);
-}
-
 export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldScene {
   const scene = new Scene();
   scene.background = new Color("#020304");
@@ -42,21 +38,14 @@ export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldSc
   scene.add(moon);
 
   let disposed = false;
-  const load = (name: MoonTextureName, onLoad: (texture: Texture) => void) => {
-    void loadMoonTexture(name).then((texture) => {
-      if (disposed) return;
-      onLoad(texture);
-      onAssetReady();
-    }).catch(() => {});
-  };
-  load("moon-albedo.webp", (texture) => {
-    material.map = texture;
+  const ready = Promise.all([loadMoonTexture("moon-albedo.webp"), loadMoonTexture("moon-elevation.png")]).then(([albedo, elevation]) => {
+    if (disposed) return;
+    material.map = albedo;
+    material.bumpMap = elevation;
     material.needsUpdate = true;
+    onAssetReady();
   });
-  load("moon-elevation.png", (texture) => {
-    material.bumpMap = texture;
-    material.needsUpdate = true;
-  });
+  void ready.catch(() => {});
 
   const sun = new DirectionalLight("#f3f5f7", 3.2);
   sun.position.set(-5, 4, 6);
@@ -79,16 +68,17 @@ export function createMoonScene({ mobile, onAssetReady }: SceneOptions): WorldSc
   const starMaterial = new PointsMaterial({ color: "#c8d5e6", size: 0.055, transparent: true, opacity: 0.32, depthWrite: false, blending: AdditiveBlending });
   scene.add(new Points(starGeometry, starMaterial));
   const nightSurface = new Color("#b3c1d1");
-  const daySpace = new Color("#dfe4e8");
+  const daySpace = new Color("#e4f0f7");
   const nightSpace = new Color("#020304");
   let baseScale = mobile ? 0.32 : 0.74;
 
   return {
     scene,
     camera,
+    ready,
     update(frame: WorldFrame) {
       (scene.background as Color).copy(daySpace).lerp(nightSpace, frame.night);
-      material.color.set("#c2ccd5").lerp(nightSurface, frame.night);
+      material.color.set("#c5d3dd").lerp(nightSurface, frame.night);
       sun.intensity = 3.2 - frame.night * 1.3;
       rim.intensity = 0.22 + frame.night * 0.25 + frame.audio.low * frame.audio.active * 0.08;
       ambient.intensity = 0.045 + frame.night * 0.035;

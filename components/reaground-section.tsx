@@ -6,12 +6,12 @@ import { EvidenceDisclosure } from "./evidence-disclosure";
 import { ProductAccent } from "./product-accent";
 import { StudyHeading } from "./study-heading";
 
-const dimensions = [
-  { id: "local", index: "01", label: "LOCAL INFERENCE", title: "感知留在设备里。", detail: "屏幕、指令与模型形成本地闭环，云端不是默认的数据出口。", footer: "ONE DEVICE · CLOSED LOOP" },
-  { id: "speed", index: "02", label: "INFERENCE SPEED", title: "把计算留给有效像素。", detail: "共享缩放预算与一次区域裁剪，减少无效观察，而不是盲目搜索候选框。", footer: "RESIZE ONCE · CROP ONCE" },
-  { id: "training", index: "03", label: "POST-TRAINING", title: "让观察策略继续进化。", detail: "SFT 与 GRPO 通过覆盖和紧凑度奖励，教会模型选择更有用的区域。", footer: "COVERAGE · COMPACTNESS" },
+const targets = [
+  { id: "search", label: "搜索按钮", instruction: "点击搜索按钮", region: { x: 57, y: 12, width: 37, height: 28 }, point: { x: 84, y: 26 }, coordinate: ["0.84", "0.26"], confidence: "0.98" },
+  { id: "download", label: "下载按钮", instruction: "下载第一个文件", region: { x: 34, y: 43, width: 60, height: 27 }, point: { x: 82, y: 56 }, coordinate: ["0.82", "0.56"], confidence: "0.96" },
+  { id: "settings", label: "设置入口", instruction: "打开设置", region: { x: 3, y: 66, width: 28, height: 26 }, point: { x: 16, y: 79 }, coordinate: ["0.16", "0.79"], confidence: "0.97" },
 ] as const;
-type Dimension = (typeof dimensions)[number]["id"];
+type TargetId = (typeof targets)[number]["id"];
 
 const evidence = [
   { title: "One backbone, one adapter", text: "同一个 Qwen2.5-VL backbone 与 LoRA adapter 贯穿训练和推理，区域定位不是额外拼接的一套模型。" },
@@ -19,67 +19,60 @@ const evidence = [
   { title: "Learning how to inspect", text: "Direct-point SFT 建立直接定位能力，Region SFT 建立区域输出分布，GRPO 再用覆盖与紧凑度优化观察策略。" },
 ];
 
-function LocalScene() {
-  return <svg viewBox="0 0 320 220" fill="none" aria-hidden="true">
-    <rect x="20" y="25" width="280" height="158" rx="16" className="ground-device" />
-    {[20, 120, 220].map((x) => <rect key={x} x={x + 8} y="67" width="64" height="66" rx="9" className="ground-node" />)}
-    <path d="M92 100h28m-6-5 6 5-6 5M192 100h28m-6-5 6 5-6 5" className="ground-arrow" />
-    <text x="60" y="94" textAnchor="middle" className="ground-node-label">SCREEN</text><text x="60" y="112" textAnchor="middle" className="ground-node-value">输入</text>
-    <text x="160" y="99" textAnchor="middle" className="ground-model">3B</text><text x="160" y="117" textAnchor="middle" className="ground-node-label">LOCAL</text>
-    <text x="260" y="94" textAnchor="middle" className="ground-node-label">ACTION</text><text x="260" y="112" textAnchor="middle" className="ground-node-value">输出</text>
-    <circle cx="36" cy="42" r="3" className="ground-status" /><text x="47" y="46" className="ground-micro">ON DEVICE</text>
-    <text x="160" y="161" textAnchor="middle" className="ground-micro">NO CLOUD REQUIRED</text>
-  </svg>;
-}
-
-function SpeedScene({ active }: { active: boolean }) {
-  const reducedMotion = useReducedMotion();
-  return <svg viewBox="0 0 320 220" fill="none" aria-hidden="true">
-    <rect x="22" y="25" width="196" height="158" rx="12" className="ground-screen" />
-    <path d="M22 49h196" className="ground-hairline" /><circle cx="36" cy="37" r="2.5" className="ground-ui" /><circle cx="45" cy="37" r="2.5" className="ground-ui" />
-    <rect x="39" y="66" width="69" height="10" rx="3" className="ground-ui" /><rect x="39" y="86" width="43" height="7" rx="3" className="ground-ui faint" />
-    <rect x="39" y="115" width="69" height="42" rx="6" className="ground-ui faint" /><rect x="126" y="66" width="70" height="91" rx="6" className="ground-ui faint" />
-    <motion.g animate={{ opacity: active || reducedMotion ? 1 : 0.55 }} transition={{ duration: 0.25 }}>
-      <rect x="116" y="58" width="90" height="108" rx="8" className="ground-crop" />
-      <path d="M116 72V58h14M192 58h14v14M206 152v14h-14M130 166h-14v-14" className="ground-crop-corner" />
-    </motion.g>
-    <path d="M225 105h28m-6-5 6 5-6 5" className="ground-arrow" />
-    <circle cx="278" cy="105" r="22" className="ground-target" /><circle cx="278" cy="105" r="5" className="ground-target-point" />
-    <path d="M278 75v12M278 123v12M248 105h12M296 105h12" className="ground-arrow" />
-  </svg>;
-}
-
-function TrainingScene() {
-  const stages = [
-    { x: 31, px: 12, py: 17, width: 80, height: 117, label: "DIRECT", type: "SFT" },
-    { x: 119, px: 9, py: 10, width: 66, height: 94, label: "REGION", type: "SFT" },
-    { x: 207, px: 5, py: 5, width: 54, height: 74, label: "GRPO", type: "RL" },
-  ];
-  return <svg viewBox="0 0 320 220" fill="none" aria-hidden="true">
-    {stages.map((stage) => <g key={stage.label}>
-      <rect x={stage.x} y="32" width="82" height="142" rx="9" className="ground-training-frame" />
-      <rect x={stage.x + 18} y="57" width="46" height="68" rx="4" className="ground-training-target" />
-      <rect x={stage.x + stage.px} y={32 + stage.py} width={stage.width} height={stage.height} rx="5" className="ground-training-prediction" />
-      <text x={stage.x + 41} y="151" textAnchor="middle" className="ground-node-label">{stage.label}</text><text x={stage.x + 41} y="164" textAnchor="middle" className="ground-micro">{stage.type}</text>
-    </g>)}
-    <path d="M61 194h198" className="ground-hairline" /><path d="m246 189 6 5-6 5" className="ground-arrow" />
-    <text x="31" y="199" className="ground-micro">LEARN TO INSPECT</text>
-  </svg>;
-}
-
 export function ReagroundSection() {
-  const [active, setActive] = useState<Dimension>("local");
+  const [selected, setSelected] = useState<TargetId>("search");
+  const reducedMotion = useReducedMotion();
+  const target = targets.find((item) => item.id === selected) ?? targets[0];
+
   return (
     <section id="reaground" className="product-study reaground-study" aria-labelledby="reaground-title">
       <div className="product-scene-accent"><ProductAccent product="reaground" /></div>
-      <StudyHeading id="reaground-title" eyebrow="Local models, made practical" name="ReAGround" title="本地推理、推理效率、后训练，缺一不可。" description="不是只让 GUI 模型看懂截图，而是同时回答它能否留在本地、能否高效观察、能否通过训练持续变得更好。" status="研究与开发" href="https://github.com/zryshuaige/ReAGround" />
-      <div className="grounding-dimensions">
-        {dimensions.map((dimension) => <button key={dimension.id} type="button" className={`grounding-dimension ${active === dimension.id ? "is-active" : ""}`} aria-pressed={active === dimension.id} onPointerEnter={() => setActive(dimension.id)} onFocus={() => setActive(dimension.id)} onClick={() => setActive(dimension.id)}>
-          <span className="dimension-heading"><span>{dimension.index} / {dimension.label}</span><i aria-hidden="true" /></span>
-          <span className="dimension-title">{dimension.title}</span>
-          {dimension.id === "local" ? <LocalScene /> : dimension.id === "speed" ? <SpeedScene active={active === "speed"} /> : <TrainingScene />}
-          <span className="dimension-copy">{dimension.detail}</span><span className="dimension-footer">{dimension.footer}</span>
-        </button>)}
+      <StudyHeading
+        id="reaground-title"
+        eyebrow="Local models, made practical"
+        name="ReAGround"
+        title="让本地模型看懂屏幕，并告诉 Agent 点哪里。"
+        description="截图不必离开设备。3B 模型先找出相关区域，再输出可以点击的坐标；一次区域裁剪，把计算留给真正有用的像素。"
+        status="研究与开发"
+        category="ON-DEVICE GUI GROUNDING"
+        flow={["屏幕与指令", "本地 3B 定位", "坐标与动作"]}
+        href="https://github.com/zryshuaige/ReAGround"
+      />
+      <div className="grounding-lab">
+        <div className="grounding-command">
+          <div><span>YOUR INSTRUCTION</span><p>“{target.instruction}”</p></div>
+          <span className="local-inference-badge"><i aria-hidden="true" />LOCAL · NO CLOUD UPLOAD</span>
+        </div>
+        <div className="ground-target-picker" aria-label="选择屏幕定位目标">
+          {targets.map((item) => <button key={item.id} type="button" aria-pressed={selected === item.id} onClick={() => setSelected(item.id)}>{item.label}<span>↗</span></button>)}
+        </div>
+        <div className="grounding-pipeline">
+          <div className="ground-screen-panel">
+            <div className="scene-topline"><span>01 / OBSERVE</span><span>1920 × 1080</span></div>
+            <div className="mock-desktop">
+              <div className="mock-browser-bar"><i /><i /><i /><span>workspace.local</span></div>
+              <div className="mock-sidebar"><b>RySpace</b><span>Overview</span><span>Documents</span><span>Activity</span><span className="mock-settings">⚙ Settings</span></div>
+              <div className="mock-content"><span>Good morning, Ryen</span><strong>Workspace</strong><div className="mock-search">Search anything…</div><div className="mock-file"><span>AI-research.pdf</span><b>Download</b></div><div className="mock-file is-second"><span>Weekly-notes.md</span><b>•••</b></div></div>
+              <motion.div key={`region-${target.id}`} className="ground-region" initial={reducedMotion ? false : { opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} style={{ left: `${target.region.x}%`, top: `${target.region.y}%`, width: `${target.region.width}%`, height: `${target.region.height}%` }}><span>REGION 01</span></motion.div>
+              <motion.i key={`point-${target.id}`} className="ground-click-point" initial={reducedMotion ? false : { opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} style={{ left: `${target.point.x}%`, top: `${target.point.y}%` }} />
+            </div>
+          </div>
+          <div className="ground-crop-panel">
+            <div className="scene-topline"><span>02 / CROP ONCE</span><span>LOCAL</span></div>
+            <motion.div key={target.id} className="ground-crop-preview" initial={reducedMotion ? false : { opacity: 0.5 }} animate={{ opacity: 1 }}>
+              <span>{target.label}</span>
+              <div className="crop-ui-bar" /><div className="crop-ui-block" /><i aria-hidden="true" />
+            </motion.div>
+            <p>只保留相关区域<br /><span>减少无效像素与候选搜索</span></p>
+          </div>
+          <div className="ground-output-panel">
+            <div className="scene-topline"><span>03 / POINT</span><span>3B MODEL</span></div>
+            <div className="ground-coordinate"><span>CLICK TARGET</span><strong>{target.coordinate[0]}<em>,</em> {target.coordinate[1]}</strong><p>归一化屏幕坐标</p></div>
+            <pre><code>{`{\n  "action": "click",\n  "x": ${target.coordinate[0]},\n  "y": ${target.coordinate[1]}\n}`}</code></pre>
+            <div className="ground-confidence"><span>CONFIDENCE</span><b>{target.confidence}</b></div>
+          </div>
+        </div>
+        <div className="grounding-foot"><span>REGION → CROP → POINT</span><span>CONCEPT SIMULATION / NO LIVE MODEL INFERENCE</span></div>
       </div>
       <EvidenceDisclosure items={evidence} />
     </section>

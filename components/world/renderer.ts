@@ -10,8 +10,6 @@ import { createMoonScene } from "./moon";
 import { createGalaxyScene } from "./galaxy";
 import type { SceneOptions, WorldScene } from "./types";
 
-export { preloadMoonTextures } from "./moon";
-
 export class WorldRenderer {
   private canvas: HTMLCanvasElement;
   private renderer: WebGLRenderer;
@@ -21,6 +19,9 @@ export class WorldRenderer {
   private current: WorldScene;
   private currentSpace: Space;
   private pendingSpace: Space | null = null;
+  private prepared: { space: Space; world: WorldScene } | null = null;
+  private preparing: { space: Space; request: number; dispose: () => void } | null = null;
+  private prepareRequest = 0;
   private energy: { current: AudioEnergy };
   private mobile: boolean;
   private reduced: boolean;
@@ -77,6 +78,41 @@ export class WorldRenderer {
     return space === "earth" ? createEarthScene(options) : space === "moon" ? createMoonScene(options) : createGalaxyScene();
   }
 
+  prepareSpace(space: Space) {
+    if (this.disposed || space === this.currentSpace || this.prepared?.space === space || this.preparing?.space === space) return;
+    const request = ++this.prepareRequest;
+    this.preparing?.dispose();
+    this.preparing = null;
+    this.prepared?.world.dispose();
+    this.prepared = null;
+    const world = this.createScene(space);
+    world.resize(window.innerWidth, window.innerHeight);
+    let worldDisposed = false;
+    const dispose = () => {
+      if (worldDisposed) return;
+      worldDisposed = true;
+      world.dispose();
+    };
+    this.preparing = { space, request, dispose };
+    void world.ready.then(() => {
+      if (worldDisposed || this.disposed || request !== this.prepareRequest || space === this.currentSpace) {
+        dispose();
+        return;
+      }
+      return this.renderer.compileAsync(world.scene, world.camera).then(() => {
+        if (worldDisposed || this.disposed || request !== this.prepareRequest || space === this.currentSpace) {
+          dispose();
+          return;
+        }
+        this.prepared = { space, world };
+        this.preparing = null;
+      });
+    }).catch(() => {
+      dispose();
+      if (request === this.prepareRequest) this.preparing = null;
+    });
+  }
+
   private onAssetReady = () => {
     if (this.disposed) return;
     if (this.reduced) this.renderNow();
@@ -126,9 +162,15 @@ export class WorldRenderer {
   }
 
   private replaceScene(space: Space) {
+    this.prepareRequest += 1;
+    this.preparing?.dispose();
+    this.preparing = null;
+    const prepared = this.prepared?.space === space ? this.prepared.world : null;
+    if (this.prepared && !prepared) this.prepared.world.dispose();
+    this.prepared = null;
     const previous = this.current;
     this.currentSpace = space;
-    this.current = this.createScene(space);
+    this.current = prepared ?? this.createScene(space);
     this.current.resize(window.innerWidth, window.innerHeight);
     this.renderPass.scene = this.current.scene;
     this.renderPass.camera = this.current.camera as Camera;
@@ -232,6 +274,7 @@ export class WorldRenderer {
       return;
     }
     this.pendingSpace = space;
+    this.prepareSpace(space);
     this.transitionStart = performance.now();
     this.transitioning = true;
     this.start();
@@ -247,6 +290,11 @@ export class WorldRenderer {
     document.removeEventListener("visibilitychange", this.onVisibility);
     this.canvas.removeEventListener("webglcontextlost", this.onContextLost);
     this.canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
+    this.prepareRequest += 1;
+    this.preparing?.dispose();
+    this.preparing = null;
+    this.prepared?.world.dispose();
+    this.prepared = null;
     this.current.dispose();
     this.composer.dispose();
     this.bloomPass.dispose();

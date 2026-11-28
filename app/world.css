@@ -1,26 +1,11 @@
 .site-shell { --world-bg: #bdd7e1; }
 .site-shell[data-space="moon"] {
-  --bg: #e7ebee;
-  --panel: rgb(248 250 251 / 70%);
-  --panel-strong: rgb(248 250 251 / 90%);
-  --ink: #27323c;
-  --muted: #526570;
-  --line: rgb(39 50 60 / 18%);
-  --space-accent: #6d879b;
-  --world-bg: #dfe4e8;
+  --world-bg: #e4f0f7;
 }
 .site-shell[data-theme="yonder"][data-space="moon"] {
-  --bg: #080a0d;
-  --panel: rgb(22 26 31 / 68%);
-  --panel-strong: rgb(20 24 29 / 88%);
-  --ink: #edf1f3;
-  --muted: #b0bac4;
-  --line: rgb(199 215 227 / 18%);
-  --space-accent: #b8cfdf;
   --world-bg: #020304;
-  --shadow-color: rgb(0 0 0 / 30%);
 }
-.site-shell[data-space="galaxy"] { --world-bg: #dce5f1; }
+.site-shell[data-space="galaxy"] { --world-bg: #d7e9f4; }
 .site-shell[data-theme="yonder"][data-space="earth"] { --world-bg: #081521; }
 .site-shell[data-theme="yonder"][data-space="galaxy"] { --world-bg: #050914; }
 

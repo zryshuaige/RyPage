@@ -7,6 +7,19 @@ import type { ProductId } from "./product-accent";
 import type { WorldRenderer } from "./world/renderer";
 
 const productIds: ProductId[] = ["ryharness", "reaground", "rybox", "ryagent"];
+const nextSpaces: Record<Space, Space> = { earth: "moon", moon: "galaxy", galaxy: "earth" };
+
+function schedulePreparation(space: Space, prepare: (space: Space) => void) {
+  let idleId: number | null = null;
+  let fallbackId: number | null = null;
+  const run = () => prepare(nextSpaces[space]);
+  if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(run, { timeout: 3000 });
+  else fallbackId = window.setTimeout(run, 1500);
+  return () => {
+    if (idleId !== null) window.cancelIdleCallback(idleId);
+    if (fallbackId !== null) window.clearTimeout(fallbackId);
+  };
+}
 
 export function WorldCanvas({ space, theme, energy }: { space: Space; theme: Theme; energy: RefObject<AudioEnergy> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,26 +32,24 @@ export function WorldCanvas({ space, theme, energy }: { space: Space; theme: The
 
   useEffect(() => {
     let cancelled = false;
-    let idleId: number | null = null;
-    let fallbackId: number | null = null;
+    let cancelPreload: (() => void) | null = null;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    import("./world/renderer").then(({ createWorldRenderer, preloadMoonTextures }) => {
+    import("./world/renderer").then(({ createWorldRenderer }) => {
       if (cancelled) return;
       const current = latest.current;
       rendererRef.current = createWorldRenderer(canvas, current.space, current.theme, current.energy);
-      const preload = () => { void preloadMoonTextures().catch(() => {}); };
-      if (typeof window.requestIdleCallback === "function") idleId = window.requestIdleCallback(preload, { timeout: 3000 });
-      else fallbackId = window.setTimeout(preload, 1500);
+      cancelPreload = schedulePreparation(current.space, (space) => rendererRef.current?.prepareSpace(space));
     }).catch(() => { if (!cancelled) setFailed(true); });
     return () => {
       cancelled = true;
-      if (idleId !== null) window.cancelIdleCallback(idleId);
-      if (fallbackId !== null) window.clearTimeout(fallbackId);
+      cancelPreload?.();
       rendererRef.current?.dispose();
       rendererRef.current = null;
     };
   }, []);
+
+  useEffect(() => schedulePreparation(space, (next) => rendererRef.current?.prepareSpace(next)), [space]);
 
   useEffect(() => { rendererRef.current?.transitionTo(space); }, [space]);
   useEffect(() => { rendererRef.current?.setTheme(theme); }, [theme]);

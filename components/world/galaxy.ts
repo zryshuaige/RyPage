@@ -40,7 +40,7 @@ export function createGalaxyScene(): WorldScene {
         vec2 p = uv * (1.0 + uTravel * 0.12) + uPointer * 0.045 + uWind * 0.005;
         float time = uTime * 0.007;
         float backgroundNoise = fbm(p * 2.1 + vec2(time, -time * 0.4));
-        vec3 dayBase = mix(vec3(0.72, 0.79, 0.88), vec3(0.55, 0.65, 0.81), smoothstep(-0.7, 0.8, uv.y));
+        vec3 dayBase = mix(vec3(0.84, 0.91, 0.95), vec3(0.66, 0.80, 0.89), smoothstep(-0.7, 0.8, uv.y));
         vec3 nightBase = mix(vec3(0.002, 0.004, 0.013), vec3(0.005, 0.012, 0.032), smoothstep(-0.8, 0.8, uv.y));
         vec3 base = mix(dayBase, nightBase, uNight);
         base += mix(vec3(0.04, 0.06, 0.1), vec3(0.015, 0.025, 0.06), uNight) * (backgroundNoise - 0.5);
@@ -60,8 +60,8 @@ export function createGalaxyScene(): WorldScene {
         float dust = pow(0.5 + 0.5 * cos(phase * 2.0 + 0.52), 13.0) * exp(-radius * 3.0);
         float quiet = mix(0.42, 1.0, smoothstep(-0.55, 0.25, uv.x));
         float visibility = quiet * (1.0 - uProduct * 0.62);
-        vec3 armColor = mix(vec3(0.09, 0.25, 0.47), vec3(0.1, 0.32, 0.62), uNight);
-        vec3 armSecondary = mix(vec3(0.31, 0.2, 0.46), vec3(0.34, 0.18, 0.55), uNight);
+        vec3 armColor = mix(vec3(0.12, 0.31, 0.45), vec3(0.1, 0.32, 0.62), uNight);
+        vec3 armSecondary = mix(vec3(0.32, 0.49, 0.62), vec3(0.34, 0.18, 0.55), uNight);
         vec3 color = base;
         float armGrain = fbm(q * 12.0 + detail);
         float armLight = arms * radial * (0.45 + detail * 0.65 + armGrain * 0.55) + outer * backgroundNoise;
@@ -97,6 +97,7 @@ export function createGalaxyScene(): WorldScene {
   return {
     scene,
     camera,
+    ready: Promise.resolve(),
     update(frame: WorldFrame) {
       uniforms.uTime.value = frame.time;
       uniforms.uNight.value = frame.night;
